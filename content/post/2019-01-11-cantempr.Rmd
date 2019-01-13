@@ -1,0 +1,148 @@
+---
+title: "Long-term temperature trends at 338 Canadian climate stations"
+author: "Patrick Barks"
+date: '2019-01-11'
+tags:
+- R Package
+- climate
+categories: R
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = FALSE,
+                      fig.width = 8)
+
+library(ggplot2)
+tt <- theme_minimal() +
+  theme(axis.text = element_text(size = 13),
+        axis.title = element_text(size = 15),
+        plot.title = element_text(size = 15, hjust = 0),
+        axis.title.x = element_text(margin = margin(0.3, 0, 0, 0, unit = 'cm')),
+        axis.title.y = element_text(margin = margin(0, 0.2, 0, 0, unit = 'cm')))
+theme_set(tt)
+```
+
+A few months ago I came across a [CBC News article](https://www.cbc.ca/news/technology/charts-climate-change-bar-codes-1.4802293) on temperature barcode plots, a type of plot used to visualize time series of temperature data. The creator suggests they provide an intuitive way for a general audience to understand changes in temperature over time.
+
+[![](/img/calgary-barplot.png)](https://www.cbc.ca/news/technology/charts-climate-change-bar-codes-1.4802293)
+
+I'm mostly ambivalent about the merits of barcode plots, but I was very interested in the underlying data: homogenized monthly temperatures at 338 Canadian climate stations dating as far back as 1841 (from [Vincent et al. 2012](https://doi.org/10.1029/2012JD017859); available from [Environment and Climate Change Canada](https://www.canada.ca/en/environment-climate-change/services/climate-change/science-research-data/climate-trends-variability/adjusted-homogenized-canadian-data/surface-air-temperature-access.html)). 'Homogenized' in this context means that statistical methods were used to combine data from multiple stations and correct for discontinuities (e.g. due to changes in instrumentation, station location, etc.).
+
+The data weren't in a particularly usable format (e.g. split across 338 files), so I decided to tidy and bundle the data into an R package [`cantempr`](https://github.com/patrickbarks/cantempr). Here's a quick demo:
+
+```{r, fig.height=3, message=FALSE}
+# remotes::install_github("patrickbarks/cantempr")
+library(cantempr)
+
+temp_monthly <- cantemp_fetch(interval = "monthly")
+temp_monthly[1:4,]
+```
+
+## Visualizing changes in temperature over time
+
+Inspired by the initial article, I included a function to create temperature barcode plots using [ggplot2](https://ggplot2.tidyverse.org/).
+
+```{r, fig.height=3, message=FALSE}
+temp_annual <- cantemp_fetch(interval = "annual")
+temp_toronto <- subset(temp_annual, station == "TORONTO")
+
+cantemp_barcode(temp_toronto,
+                x_breaks = seq(1850, 2010, 20),
+                plot_title = "Mean annual temperatures in Toronto since 1841")
+```
+
+What I don't love about the barcode plot is that it's hard to get a quantitative sense of the trend. The temperature scale ranges from 4.8-11.4°C and the time period ranges from 1841-2017... have mean annual temperatures in Toronto increased by 6.6°C in 176 years? I'd personally prefer a traditional line graph and trend line here.
+
+```{r}
+library(ggplot2)
+
+ggplot(temp_toronto, aes(year, temp)) +
+  geom_line(size = 0.4, color = "grey20") +
+  geom_smooth(method = "lm", color = "#0570b0") +
+  scale_x_continuous(breaks = seq(1850, 2010, 20)) +
+  scale_y_continuous(breaks = 5:11) +
+  labs(x = "Year", y = "Mean annual temperature in Toronto (\u00B0C)")
+```
+
+From the trend line it's easier to see that the change in mean annual temperature in Toronto over the last 176 years is a bit under +4°C (around +0.2°C per decade).
+
+## How have temperatures changed across the rest of Canada?
+
+Let's extend this analysis to all 338 stations.
+
+```{r, warning=FALSE, message=FALSE}
+library(dplyr)
+
+get_trend <- function(year, temp) {
+  # function to calculate linear trends (slope per decade and r-squared)
+  trend <- coef(lm(temp ~ year))[2] * 10
+  rsq <- cor(year, temp, use = "complete.obs")^2
+  return(data.frame(trend, rsq))
+}
+
+trends_full <- cantemp_fetch(interval = "annual") %>% 
+  group_by(stnid, station, province) %>% 
+  do(get_trend(.$year, .$temp)) %>% 
+  ungroup() %>% 
+  arrange(desc(trend))
+```
+
+As expected, the vast majority of stations have experienced increases in temperature (i.e. trends > 0°C per decade). The median trend is +0.17°C per decade, or +1.7°C per century. Note that trends are _not_ projections of future change.
+
+```{r, fig.height = 4}
+ggplot(trends_full, aes(trend)) +
+  geom_histogram(bins = 20, color = "grey20", fill = "#74a9cf", size = 0.3) +
+  geom_vline(xintercept = 0, linetype = 2, alpha = 0.5) +
+  labs(x = "Trend in mean annual temperature (\u00B0C per decade)",
+       y = "Number of stations")
+```
+
+The strongest increases in temperature have occurred in the three Northern territories.
+
+```{r, fig.height = 6}
+trends_full %>% 
+  mutate(province = reorder(province, trend, median)) %>% 
+  ggplot(aes(province, trend)) +
+  geom_hline(yintercept = 0, linetype = 2, alpha = 0.5) +
+  geom_jitter(aes(color = province), width = 0.22, height = 0, alpha = 0.8, size = 3.5) +
+  geom_boxplot(fill = "grey80", outlier.shape = NA, width = 0.8, alpha = 0.4, size = 0.6) +
+  scale_color_discrete(guide = FALSE) +
+  scale_y_continuous(breaks = seq(-0.1, 0.7, 0.1)) +
+  coord_flip() +
+  labs(x = NULL, y = "Trend in mean annual temperature (\u00B0C per decade)")
+```
+
+Note that I'm not controlling for the fact that temperature observation began much later in the Northern territories than most provinces, on average. However, the results are broadly similar if we limit the analysis to the period 1950-2017.
+
+If we break it down by season, we can see that temperatures have been increasing most rapidly in the winter months.
+
+```{r}
+trends_seasonal <- cantemp_fetch(interval = "seasonal") %>% 
+  group_by(province, station, interval) %>% 
+  mutate(n = length(which(!is.na(temp)))) %>% 
+  filter(n != 0) %>% 
+  do(get_trend(.$year, .$temp)) %>% 
+  ungroup()
+
+trends_seasonal %>% 
+  mutate(interval = reorder(interval, trend, median)) %>% 
+  ggplot(aes(interval, trend)) +
+  geom_hline(yintercept = 0, linetype = 2, alpha = 0.5) +
+  geom_jitter(aes(color = interval), height = 0, width = 0.3, size = 3.5, alpha = 0.7) +
+  geom_boxplot(fill = "grey80", outlier.shape = NA, alpha = 0.4, size = 0.6) +
+  scale_color_discrete(guide = FALSE) +
+  coord_flip() +
+  labs(x = NULL, y = "Trend in mean annual temperature (\u00B0C per decade)")
+```
+
+## How have temperatures changed in your hometown?
+
+Check out temperature trends for all 338 stations using an app I created, available at https://patrickbarks.github.io/canada-clim/.
+
+[![App](/img/app.png)](https://patrickbarks.github.io/canada-clim/)
+
+## References
+
+Vincent, L. A., X. L. Wang, E. J. Milewska, H. Wan, F. Yang, and V. Swail (2012) A second generation of homogenized Canadian monthly surface air temperature for climate trend analysis. Journal of Geophysical Research 117(D18110). https://doi.org/10.1029/2012JD017859

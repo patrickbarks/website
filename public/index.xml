@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Patrick Barks</title>
+    <link>/</link>
+    <description>Recent content on Patrick Barks</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 11 Jan 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Long-term temperature trends at 338 Canadian climate stations</title>
+      <link>/post/2019-01-11-cantempr/</link>
+      <pubDate>Fri, 11 Jan 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2019-01-11-cantempr/</guid>
+      <description>A few months ago I came across a CBC News article on temperature barcode plots, a type of plot used to visualize time series of temperature data. The creator suggests they provide an intuitive way for a general audience to understand changes in temperature over time.
+
+I’m mostly ambivalent about the merits of barcode plots, but I was very interested in the underlying data: homogenized monthly temperatures at 338 Canadian climate stations dating as far back as 1841 (from Vincent et al.</description>
+    </item>
+    
+  </channel>
+</rss>
