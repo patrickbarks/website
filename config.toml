@@ -1,5 +1,5 @@
 # Site settings
-baseurl = "/"
+baseurl = "https://pmbarks.com/"
 languageCode = "en"
 title = "Patrick Barks"
 theme = "hugo-theme-cactus-plus"
@@ -8,9 +8,12 @@ googleAnalytics = "your_google_analytics_id"
 hasCJKLanguage = false
 ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 
+[permalinks]
+  post = "/:year/:slug/"
+
 [params]
 	author = "Patrick Barks"
-	description = ""
+	description = "A blog about coding, statistics, and ecology"
 	bio = "coding, statistics, ecology"
 
 	twitter = "pmbarks"
@@ -23,12 +26,12 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 	disqusShortname = "your_disqus_short_name"
 
 
-	enableSummary = true
+	enableSummary = false
 	# Set the value to true if use description in post front matter replace content summary
 	useDescriptionReplaceSummary = true
 
 
-	enableGoogleAnalytics = true
+	enableGoogleAnalytics = false
 	enableBaiduAnalytics = false
 	# Set the value to your baidu analysis code if you want to use baidu analytics
 	baiduAnalytics = 'your_baidu_analysis_code'

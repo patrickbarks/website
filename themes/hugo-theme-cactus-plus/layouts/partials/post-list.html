@@ -7,11 +7,11 @@
                 <a href='{{ .Permalink }}'>
                     {{ .Title }}
                     {{ if .Site.Params.enableSummary }}
-                        <!-- {{ if .Site.Params.useDescriptionReplaceSummary }}
+                        {{ if .Site.Params.useDescriptionReplaceSummary }}
                             <h2>{{ .Description | plainify }}</h2>
                         {{ else }}
                             <h2>{{ .Summary | plainify | htmlUnescape }}</h2>
-                        {{ end }} -->
+                        {{ end }}
                     {{ end }}
                 </a>
             </li>

@@ -1,99 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		 
-			
-  
-    <meta name="twitter:card" content="summary"/>
-    
-      <meta name="twitter:image" content="/images/avatar.png" />
-    
-  
-  
-  <meta name="twitter:title" content="Long-term temperature trends at 338 Canadian climate stations"/>
-  <meta name="twitter:description" content="A few months ago I came across a CBC News article on temperature barcode plots, a type of plot used to visualize time series of temperature data. The creator suggests they provide an intuitive way for a general audience to understand changes in temperature over time.
+---
+title: "Long-term temperature trends at 338 Canadian climate stations"
+slug: 'canada-temp-trends'
+author: "Patrick Barks"
+date: '2019-01-11'
+tags:
+- R Package
+- climate
+categories: R
+description: "Analysis of homogenized temperature data for 338 Canadian climate stations"
+image: true
+image_src: img/app.png
+editor_options:
+  chunk_output_type: console
+---
 
-I’m mostly ambivalent about the merits of barcode plots, but I was very interested in the underlying data: homogenized monthly temperatures at 338 Canadian climate stations dating as far back as 1841 (from Vincent et al."/>
-  
-    <meta name="twitter:site" content="@pmbarks"/>
-  
-  
-  
-  
-    <meta name="twitter:creator" content="@Patrick Barks"/>
-  
-
-
-
-		
-		<meta name="author" content="Patrick Barks">
-		
-		<meta name="generator" content="Hugo 0.53" />
-		<title>Long-term temperature trends at 338 Canadian climate stations &middot; Patrick Barks</title>
-		<link rel="shortcut icon" href="/images/favicon.ico">
-		<link rel="stylesheet" href="/css/style.css">
-		<link rel="stylesheet" href="/css/highlight.css">
-
-		
-		<link rel="stylesheet" href="/css/font-awesome.min.css">
-		
-
-		
-		<link href="/index.xml" rel="alternate" type="application/rss+xml" title="Patrick Barks" />
-		
-
-		
-	</head>
-
-    <body>
-       <nav class="main-nav">
-	
-	
-		<a href='/'> <span class="arrow">←</span>Home</a>
-	
-	<a href='/post'>Archive</a>
-	<a href='/tags'>Tags</a>
-	<a href='/about'>About</a>
-
-	
-
-	
-	<a class="cta" href="/index.xml">Subscribe</a>
-	
-</nav>
-
-
-        <section id="wrapper" class="post">
-            <article>
-                <header>
-                    <h1>
-                        Long-term temperature trends at 338 Canadian climate stations
-                    </h1>
-                    <h2 class="headline">
-                    Jan 11, 2019
-                    
-                    
-                      <span class="tags">
-                      
-                      
-                          
-                              <a href="/tags/r-package">R Package</a>
-                          
-                              <a href="/tags/climate">climate</a>
-                          
-                      
-                      
-                      </span>
-                    </h2>
-                </header>
-                
-                  
-                
-                <section id="post-body">
-                    
 
 
 <p>A few months ago I came across a <a href="https://www.cbc.ca/news/technology/charts-climate-change-bar-codes-1.4802293">CBC News article</a> on temperature barcode plots, a type of plot used to visualize time series of temperature data. The creator suggests they provide an intuitive way for a general audience to understand changes in temperature over time.</p>
@@ -119,7 +39,7 @@ temp_toronto &lt;- subset(temp_annual, station == &quot;TORONTO&quot;)
 cantemp_barcode(temp_toronto,
                 x_breaks = seq(1850, 2010, 20),
                 plot_title = &quot;Mean annual temperatures in Toronto since 1841&quot;)</code></pre>
-<p><img src="/post/2019-01-11-cantempr_files/figure-html/unnamed-chunk-2-1.png" width="768" /></p>
+<p><img src="/post/2019-01-11-canada-temp-trends_files/figure-html/unnamed-chunk-2-1.png" width="768" /></p>
 <p>What I don’t love about the barcode plot is that it’s hard to get a quantitative sense of the trend. The temperature scale ranges from 4.8-11.4°C and the time period ranges from 1841-2017… have mean annual temperatures in Toronto increased by 6.6°C in 176 years? I’d personally prefer a traditional line graph and trend line here.</p>
 <pre class="r"><code>library(ggplot2)
 
@@ -129,7 +49,7 @@ ggplot(temp_toronto, aes(year, temp)) +
   scale_x_continuous(breaks = seq(1850, 2010, 20)) +
   scale_y_continuous(breaks = 5:11) +
   labs(x = &quot;Year&quot;, y = &quot;Mean annual temperature in Toronto (\u00B0C)&quot;)</code></pre>
-<p><img src="/post/2019-01-11-cantempr_files/figure-html/unnamed-chunk-3-1.png" width="768" /></p>
+<p><img src="/post/2019-01-11-canada-temp-trends_files/figure-html/unnamed-chunk-3-1.png" width="768" /></p>
 <p>From the trend line it’s easier to see that the change in mean annual temperature in Toronto over the last 176 years is a bit under +4°C (around +0.2°C per decade).</p>
 </div>
 <div id="how-have-temperatures-changed-across-the-rest-of-canada" class="section level2">
@@ -144,10 +64,10 @@ get_trend &lt;- function(year, temp) {
   return(data.frame(trend, rsq))
 }
 
-trends_full &lt;- cantemp_fetch(interval = &quot;annual&quot;) %&gt;% 
-  group_by(stnid, station, province) %&gt;% 
-  do(get_trend(.$year, .$temp)) %&gt;% 
-  ungroup() %&gt;% 
+trends_full &lt;- cantemp_fetch(interval = &quot;annual&quot;) %&gt;%
+  group_by(stnid, station, province) %&gt;%
+  do(get_trend(.$year, .$temp)) %&gt;%
+  ungroup() %&gt;%
   arrange(desc(trend))</code></pre>
 <p>As expected, the vast majority of stations have experienced increases in temperature (i.e. trends &gt; 0°C per decade). The median trend is +0.17°C per decade, or +1.7°C per century. Note that trends are <em>not</em> projections of future change.</p>
 <pre class="r"><code>ggplot(trends_full, aes(trend)) +
@@ -155,10 +75,10 @@ trends_full &lt;- cantemp_fetch(interval = &quot;annual&quot;) %&gt;%
   geom_vline(xintercept = 0, linetype = 2, alpha = 0.5) +
   labs(x = &quot;Trend in mean annual temperature (\u00B0C per decade)&quot;,
        y = &quot;Number of stations&quot;)</code></pre>
-<p><img src="/post/2019-01-11-cantempr_files/figure-html/unnamed-chunk-5-1.png" width="768" /></p>
+<p><img src="/post/2019-01-11-canada-temp-trends_files/figure-html/unnamed-chunk-5-1.png" width="768" /></p>
 <p>The strongest increases in temperature have occurred in the three Northern territories.</p>
-<pre class="r"><code>trends_full %&gt;% 
-  mutate(province = reorder(province, trend, median)) %&gt;% 
+<pre class="r"><code>trends_full %&gt;%
+  mutate(province = reorder(province, trend, median)) %&gt;%
   ggplot(aes(province, trend)) +
   geom_hline(yintercept = 0, linetype = 2, alpha = 0.5) +
   geom_jitter(aes(color = province), width = 0.22, height = 0, alpha = 0.8, size = 3.5) +
@@ -167,18 +87,18 @@ trends_full &lt;- cantemp_fetch(interval = &quot;annual&quot;) %&gt;%
   scale_y_continuous(breaks = seq(-0.1, 0.7, 0.1)) +
   coord_flip() +
   labs(x = NULL, y = &quot;Trend in mean annual temperature (\u00B0C per decade)&quot;)</code></pre>
-<p><img src="/post/2019-01-11-cantempr_files/figure-html/unnamed-chunk-6-1.png" width="768" /></p>
+<p><img src="/post/2019-01-11-canada-temp-trends_files/figure-html/unnamed-chunk-6-1.png" width="768" /></p>
 <p>Note that I’m not controlling for the fact that temperature observation began much later in the Northern territories than most provinces, on average. However, the results are broadly similar if we limit the analysis to the period 1950-2017.</p>
 <p>If we break it down by season, we can see that temperatures have been increasing most rapidly in the winter months.</p>
-<pre class="r"><code>trends_seasonal &lt;- cantemp_fetch(interval = &quot;seasonal&quot;) %&gt;% 
-  group_by(province, station, interval) %&gt;% 
-  mutate(n = length(which(!is.na(temp)))) %&gt;% 
-  filter(n != 0) %&gt;% 
-  do(get_trend(.$year, .$temp)) %&gt;% 
+<pre class="r"><code>trends_seasonal &lt;- cantemp_fetch(interval = &quot;seasonal&quot;) %&gt;%
+  group_by(province, station, interval) %&gt;%
+  mutate(n = length(which(!is.na(temp)))) %&gt;%
+  filter(n != 0) %&gt;%
+  do(get_trend(.$year, .$temp)) %&gt;%
   ungroup()
 
-trends_seasonal %&gt;% 
-  mutate(interval = reorder(interval, trend, median)) %&gt;% 
+trends_seasonal %&gt;%
+  mutate(interval = reorder(interval, trend, median)) %&gt;%
   ggplot(aes(interval, trend)) +
   geom_hline(yintercept = 0, linetype = 2, alpha = 0.5) +
   geom_jitter(aes(color = interval), height = 0, width = 0.3, size = 3.5, alpha = 0.7) +
@@ -186,7 +106,7 @@ trends_seasonal %&gt;%
   scale_color_discrete(guide = FALSE) +
   coord_flip() +
   labs(x = NULL, y = &quot;Trend in mean annual temperature (\u00B0C per decade)&quot;)</code></pre>
-<p><img src="/post/2019-01-11-cantempr_files/figure-html/unnamed-chunk-7-1.png" width="768" /></p>
+<p><img src="/post/2019-01-11-canada-temp-trends_files/figure-html/unnamed-chunk-7-1.png" width="768" /></p>
 </div>
 <div id="how-have-temperatures-changed-in-your-hometown" class="section level2">
 <h2>How have temperatures changed in your hometown?</h2>
@@ -197,72 +117,3 @@ trends_seasonal %&gt;%
 <h2>References</h2>
 <p>Vincent, L. A., X. L. Wang, E. J. Milewska, H. Wan, F. Yang, and V. Swail (2012) A second generation of homogenized Canadian monthly surface air temperature for climate trend analysis. Journal of Geophysical Research 117(D18110). <a href="https://doi.org/10.1029/2012JD017859" class="uri">https://doi.org/10.1029/2012JD017859</a></p>
 </div>
-
-                </section>
-            </article>
-
-            
-
-            
-
-            
-
-            <footer id="footer">
-    
-        <div id="social">
-
-	
-	
-    <a class="symbol" href="https://www.github.com/patrickbarks">
-        <i class="fa fa-github-square"></i>
-    </a>
-    
-    <a class="symbol" href="https://www.twitter.com/pmbarks">
-        <i class="fa fa-twitter-square"></i>
-    </a>
-    
-
-
-</div>
-
-    
-    <p class="small">
-    
-       © Copyright 2019 Patrick Barks
-    
-    </p>
-    <p class="small">
-        Powered by <a href="http://www.gohugo.io/">Hugo</a> Theme by <a href="https://github.com/nodejh/hugo-theme-cactus-plus">nodejh</a>
-    </p>
-</footer>
-
-        </section>
-
-        <script src="/js/jquery-3.3.1.min.js"></script>
-<script src="/js/main.js"></script>
-<script src="/js/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-
-
-
-
-  
-<script type="application/javascript">
-var doNotTrack = false;
-if (!doNotTrack) {
-	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-	ga('create', 'your_google_analytics_id', 'auto');
-	
-	ga('send', 'pageview');
-}
-</script>
-
-
-
-
-
-    </body>
-</html>

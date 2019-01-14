@@ -1,12 +1,16 @@
 ---
 title: "Long-term temperature trends at 338 Canadian climate stations"
+slug: 'canada-temp-trends'
 author: "Patrick Barks"
 date: '2019-01-11'
 tags:
 - R Package
 - climate
 categories: R
-editor_options: 
+description: "Analysis of homogenized temperature data for 338 Canadian climate stations"
+image: true
+image_src: img/app.png
+editor_options:
   chunk_output_type: console
 ---
 
@@ -82,10 +86,10 @@ get_trend <- function(year, temp) {
   return(data.frame(trend, rsq))
 }
 
-trends_full <- cantemp_fetch(interval = "annual") %>% 
-  group_by(stnid, station, province) %>% 
-  do(get_trend(.$year, .$temp)) %>% 
-  ungroup() %>% 
+trends_full <- cantemp_fetch(interval = "annual") %>%
+  group_by(stnid, station, province) %>%
+  do(get_trend(.$year, .$temp)) %>%
+  ungroup() %>%
   arrange(desc(trend))
 ```
 
@@ -102,8 +106,8 @@ ggplot(trends_full, aes(trend)) +
 The strongest increases in temperature have occurred in the three Northern territories.
 
 ```{r, fig.height = 6}
-trends_full %>% 
-  mutate(province = reorder(province, trend, median)) %>% 
+trends_full %>%
+  mutate(province = reorder(province, trend, median)) %>%
   ggplot(aes(province, trend)) +
   geom_hline(yintercept = 0, linetype = 2, alpha = 0.5) +
   geom_jitter(aes(color = province), width = 0.22, height = 0, alpha = 0.8, size = 3.5) +
@@ -119,15 +123,15 @@ Note that I'm not controlling for the fact that temperature observation began mu
 If we break it down by season, we can see that temperatures have been increasing most rapidly in the winter months.
 
 ```{r}
-trends_seasonal <- cantemp_fetch(interval = "seasonal") %>% 
-  group_by(province, station, interval) %>% 
-  mutate(n = length(which(!is.na(temp)))) %>% 
-  filter(n != 0) %>% 
-  do(get_trend(.$year, .$temp)) %>% 
+trends_seasonal <- cantemp_fetch(interval = "seasonal") %>%
+  group_by(province, station, interval) %>%
+  mutate(n = length(which(!is.na(temp)))) %>%
+  filter(n != 0) %>%
+  do(get_trend(.$year, .$temp)) %>%
   ungroup()
 
-trends_seasonal %>% 
-  mutate(interval = reorder(interval, trend, median)) %>% 
+trends_seasonal %>%
+  mutate(interval = reorder(interval, trend, median)) %>%
   ggplot(aes(interval, trend)) +
   geom_hline(yintercept = 0, linetype = 2, alpha = 0.5) +
   geom_jitter(aes(color = interval), height = 0, width = 0.3, size = 3.5, alpha = 0.7) +
